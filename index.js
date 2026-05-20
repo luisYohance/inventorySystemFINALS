@@ -40,4 +40,117 @@ server.post("/create", async (req, res) => {
   }
 });
 
+server.patch("/update/:id", async (req, res) => {
+  try {
+    const updatedItem = await Item.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
+    if (!updatedItem) {
+      return res.status(404).json({ error: "Item not found" });
+    } else {
+      res.status(200).json(updatedItem);
+    }
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      error: err.message,
+    });
+  }
+});
+
+server.delete("/delete/:id", async (req, res) => {
+  try {
+    const deletedItem = await Item.findByIdAndDelete(req.params.id);
+    if (!deletedItem) {
+      return res.status(404).json({ error: "Item not found" });
+    } else {
+      res.status(200).json(deletedItem);
+    }
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      error: err.message,
+    });
+  }
+});
+
+server.patch("/toggle-display/:id", async (req, res) => {
+  try {
+    const item = await Item.findById(req.params.id);
+    if (!item) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+    item.isDisplayed = !item.isDisplayed;
+    const updatedItem = await item.save();
+    res.status(200).json(updatedItem);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      error: err.message,
+    });
+  }
+});
+
+server.get("/items", async (req, res) => {
+  try {
+    const items = await Item.find();
+    res.status(200).json(items);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      error: err.message,
+    });
+  }
+});
+
+server.patch("/add-count/:id", async (req, res) => {
+  try {
+    const item = await Item.findById(req.params.id);
+    if (typeof req.body.count !== "number") {
+      return res.status(400).json({ error: "Count must be a number" });
+    }
+    if (!item) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+    if (req.body.count < 0) {
+      return res.status(400).json({ error: "Count must be a positive number" });
+    }
+    item.count += req.body.count != undefined ? req.body.count : 1;
+    const updatedItem = await item.save();
+    res.status(200).json(updatedItem);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      error: err.message,
+    });
+  }
+});
+
+server.patch("/remove-count/:id", async (req, res) => {
+  try {
+    const item = await Item.findById(req.params.id);
+    if (typeof req.body.count !== "number") {
+      return res.status(400).json({ error: "Count must be a number" });
+    }
+    if (!item) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+    if (req.body.count < 0) {
+      return res.status(400).json({ error: "Count must be a positive number" });
+    }
+    if (item.count < req.body.count) {
+      return res.status(400).json({ error: "Not enough items in stock" });
+    }
+
+    item.count -= req.body.count != undefined ? req.body.count : 1;
+    const updatedItem = await item.save();
+    res.status(200).json(updatedItem);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      error: err.message,
+    });
+  }
+});
+
 server.listen(port, () => console.log("Server is now running on port " + port));
